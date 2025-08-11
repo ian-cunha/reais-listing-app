@@ -1,12 +1,75 @@
 import React, { useRef } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking, } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 function App(): React.JSX.Element {
-  const siteUrl = "https://reaislisting.com.br/";
+  const siteUrl = 'https://reaislisting.com.br/';
   const statusBarColor = '#F46001';
-
   const webViewRef = useRef<WebView>(null);
+
+  // --- Funções Auxiliares ---
+  const isWhatsAppUrl = (url: string) =>
+    url.startsWith('whatsapp://') ||
+    url.startsWith('https://wa.me/') ||
+    url.startsWith('https://api.whatsapp.com/');
+
+  const isKnownExternalUrl = (url: string) => {
+    const externalLinks = [
+      'https://www.facebook.com/',
+      'https://twitter.com/',
+      'https://x.com/',
+      'https://instagram.com/',
+      'https://app.reaisystems.com.br/imovel/imprimir',
+      'https://app.reaisystems.com.br/empresa/perfil',
+      'https://www.google.com/'
+    ];
+    return externalLinks.some(link => url.startsWith(link)) || url.endsWith('.pdf');
+  };
+
+  const openWhatsApp = (url: string) => {
+    Linking.canOpenURL(url)
+      .then(supported => {
+        if (supported) {
+          return Linking.openURL(url);
+        }
+        const textMatch = url.match(/text=([^&]+)/);
+        const text = textMatch ? decodeURIComponent(textMatch[1]) : '';
+        const fallbackUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        return Linking.openURL(fallbackUrl);
+      })
+      .catch(() => {
+        Alert.alert(
+          'Erro',
+          'Não foi possível abrir o WhatsApp. Verifique se o aplicativo está instalado.'
+        );
+      });
+  };
+
+  const openExternalLink = (url: string) => {
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Não foi possível abrir', 'Ocorreu um erro ao tentar abrir o link externo.');
+    });
+  };
+
+  // --- Lógica da WebView ---
+  const handleShouldStartLoadWithRequest = (request: { url: string }) => {
+    const { url } = request;
+
+    // Se for link do WhatsApp
+    if (isWhatsAppUrl(url)) {
+      openWhatsApp(url);
+      return false;
+    }
+
+    // Se for outros links externos
+    if (isKnownExternalUrl(url)) {
+      openExternalLink(url);
+      return false;
+    }
+
+    // Permite toda a navegação interna
+    return true;
+  };
 
   const javascriptToInject = `
     setTimeout(() => {
@@ -33,7 +96,7 @@ function App(): React.JSX.Element {
           });
 
           button.addEventListener('click', () => {
-            window.ReactNativeWebView.postMessage('goBack');
+            window.ReactNativeWebView?.postMessage('goBack');
           });
 
           document.body.appendChild(button);
@@ -46,25 +109,24 @@ function App(): React.JSX.Element {
 
   const handleMessage = (event: WebViewMessageEvent) => {
     if (event.nativeEvent.data === 'goBack') {
-      if (webViewRef.current) {
-        webViewRef.current.goBack();
-      }
+      webViewRef.current?.goBack();
     }
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }]}>
-      <StatusBar
-        backgroundColor={statusBarColor}
-        barStyle={'light-content'}
-      />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: statusBarColor }]}
+    >
+      <StatusBar backgroundColor={statusBarColor} barStyle={'light-content'} />
       <WebView
         ref={webViewRef}
         source={{ uri: siteUrl }}
         style={styles.webview}
         onMessage={handleMessage}
         injectedJavaScript={javascriptToInject}
-        allowsBackForwardNavigationGestures={true}
+        allowsBackForwardNavigationGestures
+        originWhitelist={['*']}
+        onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
       />
     </SafeAreaView>
   );
