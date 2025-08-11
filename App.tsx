@@ -1,20 +1,82 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useRef } from 'react';
+import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
-export default function App() {
+function App(): React.JSX.Element {
+  const siteUrl = "https://reaislisting.com.br/";
+  const statusBarColor = '#F46001';
+
+  const webViewRef = useRef<WebView>(null);
+
+  const javascriptToInject = `
+    setTimeout(() => {
+      if (window.location.href.includes('app.reaisystems.com.br/')) {
+        if (!document.getElementById('back-button')) {
+          const button = document.createElement('button');
+          button.id = 'back-button';
+          button.innerHTML = 'Voltar';
+
+          Object.assign(button.style, {
+            position: 'absolute',
+            top: '30px',
+            left: '15px',
+            zIndex: '9999',
+            padding: '10px 18px',
+            backgroundColor: '${statusBarColor}',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+          });
+
+          button.addEventListener('click', () => {
+            window.ReactNativeWebView.postMessage('goBack');
+          });
+
+          document.body.appendChild(button);
+        }
+      }
+    });
+
+    true;
+  `;
+
+  const handleMessage = (event: WebViewMessageEvent) => {
+    if (event.nativeEvent.data === 'goBack') {
+      if (webViewRef.current) {
+        webViewRef.current.goBack();
+      }
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }]}>
+      <StatusBar
+        backgroundColor={statusBarColor}
+        barStyle={'light-content'}
+      />
+      <WebView
+        ref={webViewRef}
+        source={{ uri: siteUrl }}
+        style={styles.webview}
+        onMessage={handleMessage}
+        injectedJavaScript={javascriptToInject}
+        allowsBackForwardNavigationGestures={true}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+  },
+  webview: {
+    flex: 1,
   },
 });
+
+export default App;

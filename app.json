@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "reais-listing-app",
-    "slug": "reais-listing-app",
-    "version": "1.0.0",
+    "name": "REAIs Listing",
+    "slug": "reais-listing",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,9 +13,24 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "CFBundleDevelopmentRegion": "pt-BR",
+        "CFBundleLocalizations": [
+          "en",
+          "pt-BR"
+        ],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      },
+      "buildNumber": "0.0.1"
     },
     "android": {
+      "permissions": [
+        "INTERNET"
+      ],
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
