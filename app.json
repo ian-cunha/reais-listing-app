@@ -2,7 +2,7 @@
   "expo": {
     "name": "REAIs Listing",
     "slug": "reais-listing",
-    "version": "0.1.0",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,23 +22,33 @@
         ],
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "NSLocationWhenInUseUsageDescription": "O REAIs Listing utiliza sua localização para exibir imóveis próximos a você."
       },
       "buildNumber": "0.0.1"
     },
     "android": {
       "permissions": [
-        "INTERNET"
+        "INTERNET",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
       ],
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.realestateaiplanner.reaislisting"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "131e6dae-1697-4da3-a232-6eef6510d5b8"
+      }
+    },
+    "owner": "realestateaiplanner"
   }
 }
