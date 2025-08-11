@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking, } from 'react-native';
+import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 function App(): React.JSX.Element {
@@ -7,7 +7,7 @@ function App(): React.JSX.Element {
   const statusBarColor = '#F46001';
   const webViewRef = useRef<WebView>(null);
 
-  // --- Funções Auxiliares ---
+  // Funções Auxiliares
   const isWhatsAppUrl = (url: string) =>
     url.startsWith('whatsapp://') ||
     url.startsWith('https://wa.me/') ||
@@ -21,7 +21,7 @@ function App(): React.JSX.Element {
       'https://instagram.com/',
       'https://app.reaisystems.com.br/imovel/imprimir',
       'https://app.reaisystems.com.br/empresa/perfil',
-      'https://www.google.com/'
+      'https://www.google.com/',
     ];
     return externalLinks.some(link => url.startsWith(link)) || url.endsWith('.pdf');
   };
@@ -51,23 +51,29 @@ function App(): React.JSX.Element {
     });
   };
 
-  // --- Lógica da WebView ---
+  // Rotas que devem SEMPRE ficar dentro da WebView
+  const alwaysInternalPrefixes = [
+    'https://app.reaisystems.com.br/empreendimento/',
+    'https://app.reaisystems.com.br/imovel/',
+  ];
+
   const handleShouldStartLoadWithRequest = (request: { url: string }) => {
     const { url } = request;
 
-    // Se for link do WhatsApp
+    if (alwaysInternalPrefixes.some(prefix => url.startsWith(prefix))) {
+      return true;
+    }
+
     if (isWhatsAppUrl(url)) {
       openWhatsApp(url);
       return false;
     }
 
-    // Se for outros links externos
     if (isKnownExternalUrl(url)) {
       openExternalLink(url);
       return false;
     }
 
-    // Permite toda a navegação interna
     return true;
   };
 
@@ -114,10 +120,12 @@ function App(): React.JSX.Element {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: statusBarColor }]}
-    >
-      <StatusBar backgroundColor={statusBarColor} barStyle={'light-content'} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }]}>
+      <StatusBar
+        backgroundColor={statusBarColor}
+        barStyle="light-content"
+        translucent={false}
+      />
       <WebView
         ref={webViewRef}
         source={{ uri: siteUrl }}
@@ -127,6 +135,8 @@ function App(): React.JSX.Element {
         allowsBackForwardNavigationGestures
         originWhitelist={['*']}
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+        setSupportMultipleWindows={false}
+        contentInsetAdjustmentBehavior="never"
       />
     </SafeAreaView>
   );
