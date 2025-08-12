@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking, AppState } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import * as Location from 'expo-location';
 
 function App(): React.JSX.Element {
   const siteUrl = 'https://reaislisting.com.br/';
@@ -19,9 +20,10 @@ function App(): React.JSX.Element {
       'https://twitter.com/',
       'https://x.com/',
       'https://instagram.com/',
-      'https://app.reaisystems.com.br/imovel/imprimir',
       'https://app.reaisystems.com.br/empresa/perfil',
       'https://www.google.com/',
+      'https://app.reaisystems.com.br/imovel/imprimir',
+      'https://app.reaisystems.com.br/empreendimento/imprimir',
     ];
     return externalLinks.some(link => url.startsWith(link)) || url.endsWith('.pdf');
   };
@@ -60,7 +62,7 @@ function App(): React.JSX.Element {
   const handleShouldStartLoadWithRequest = (request: { url: string }) => {
     const { url } = request;
 
-    if (alwaysInternalPrefixes.some(prefix => url.startsWith(prefix))) {
+    if (alwaysInternalPrefixes.some(prefix => url.startsWith(prefix) && !url.includes('/imprimir'))) {
       return true;
     }
 
@@ -101,7 +103,8 @@ function App(): React.JSX.Element {
             boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
           });
 
-          button.addEventListener('click', () => {
+          button.addEventListener('click', (event) => {
+            event.preventDefault();
             window.ReactNativeWebView?.postMessage('goBack');
           });
 
@@ -119,12 +122,42 @@ function App(): React.JSX.Element {
     }
   };
 
+  // Solicita e envia a localização para a WebView
+  const sendLocationToWebView = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão de localização negada');
+      return;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+    const { latitude, longitude } = location.coords;
+
+    webViewRef.current?.injectJavaScript(
+      `window.postMessage({ type: 'location', latitude: ${latitude}, longitude: ${longitude} }, '*');`
+    );
+  };
+
+  useEffect(() => {
+    sendLocationToWebView();
+
+    // Listener para o estado do aplicativo (ativo, inativo)
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        StatusBar.setBarStyle('light-content');
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }]}>
       <StatusBar
         backgroundColor={statusBarColor}
         barStyle="light-content"
-        translucent={false}
       />
       <WebView
         ref={webViewRef}
@@ -137,6 +170,7 @@ function App(): React.JSX.Element {
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
         setSupportMultipleWindows={false}
         contentInsetAdjustmentBehavior="never"
+        geolocationEnabled={true}
       />
     </SafeAreaView>
   );
