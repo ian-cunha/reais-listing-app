@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking, AppState } from 'react-native';
+import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking, AppState, Platform } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import * as Location from 'expo-location';
 
@@ -111,7 +111,7 @@ function App(): React.JSX.Element {
           document.body.appendChild(button);
         }
       }
-    });
+    }, 0);
 
     true;
   `;
@@ -154,10 +154,11 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }, Platform.OS === 'android' ? { paddingTop: StatusBar.currentHeight || 0 } : null,]}>
       <StatusBar
         backgroundColor={statusBarColor}
         barStyle="light-content"
+        translucent={false}
       />
       <WebView
         ref={webViewRef}
@@ -179,6 +180,7 @@ function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    ...(Platform.OS === 'android' ? { paddingTop: StatusBar.currentHeight || 0 } : null),
   },
   webview: {
     flex: 1,

@@ -3,6 +3,11 @@
 # dependencies
 node_modules/
 
+# Security
+certs/
+eas.json
+android/
+
 # Expo
 .expo/
 dist/

@@ -25,7 +25,8 @@
         },
         "NSLocationWhenInUseUsageDescription": "O REAIs Listing utiliza sua localização para exibir imóveis próximos a você."
       },
-      "buildNumber": "0.0.1"
+      "buildNumber": "0.0.1",
+      "bundleIdentifier": "com.realestateaiplanner.reaislisting"
     },
     "android": {
       "permissions": [
