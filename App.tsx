@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking, AppState, Platform } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+//import Constants from 'expo-constants';
 
 function App(): React.JSX.Element {
   const siteUrl = 'https://reaislisting.com.br/';
@@ -52,7 +53,6 @@ function App(): React.JSX.Element {
     });
   };
 
-  // Rotas que devem SEMPRE ficar dentro da WebView
   const alwaysInternalPrefixes = [
     'https://app.reaisystems.com.br/empreendimento/',
     'https://app.reaisystems.com.br/imovel/',
@@ -121,25 +121,11 @@ function App(): React.JSX.Element {
     }
   };
 
-  useEffect(() => {
-    // Listener para o estado do aplicativo (ativo, inativo)
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (nextAppState === 'active') {
-        StatusBar.setBarStyle('light-content');
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
-
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }]}>
       <StatusBar
         backgroundColor={statusBarColor}
         barStyle="light-content"
-        translucent={false}
       />
       <WebView
         ref={webViewRef}
@@ -167,6 +153,8 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
+    //marginTop: Platform.OS === 'android' ? Constants.statusBarHeight : 0,
+    //marginBottom: Platform.OS === 'android' ? 20 : 'auto',
   },
 });
 
