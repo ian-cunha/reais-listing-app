@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, Alert, Linking, AppState, Platform } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
-import * as Location from 'expo-location';
 
 function App(): React.JSX.Element {
   const siteUrl = 'https://reaislisting.com.br/';
@@ -122,25 +121,7 @@ function App(): React.JSX.Element {
     }
   };
 
-  // Solicita e envia a localização para a WebView
-  const sendLocationToWebView = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão de localização negada');
-      return;
-    }
-
-    const location = await Location.getCurrentPositionAsync({});
-    const { latitude, longitude } = location.coords;
-
-    webViewRef.current?.injectJavaScript(
-      `window.postMessage({ type: 'location', latitude: ${latitude}, longitude: ${longitude} }, '*');`
-    );
-  };
-
   useEffect(() => {
-    sendLocationToWebView();
-
     // Listener para o estado do aplicativo (ativo, inativo)
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active') {
@@ -154,7 +135,7 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }, Platform.OS === 'android' ? { paddingTop: StatusBar.currentHeight || 0 } : null,]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: statusBarColor }]}>
       <StatusBar
         backgroundColor={statusBarColor}
         barStyle="light-content"
@@ -172,6 +153,9 @@ function App(): React.JSX.Element {
         setSupportMultipleWindows={false}
         contentInsetAdjustmentBehavior="never"
         geolocationEnabled={true}
+        domStorageEnabled={true}
+        cacheEnabled={true}
+        mixedContentMode="always"
       />
     </SafeAreaView>
   );
@@ -180,7 +164,6 @@ function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    ...(Platform.OS === 'android' ? { paddingTop: StatusBar.currentHeight || 0 } : null),
   },
   webview: {
     flex: 1,
